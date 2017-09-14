@@ -57,7 +57,7 @@ bool AutoRecording::operator!=(const AutoRecording &right)
 
 time_t AutoRecording::GetStart() const
 {
-  if (Settings::GetInstance().GetAutorecApproxTime())
+  if (Settings::GetInstance2().GetAutorecApproxTime())
   {
     /* Calculate the approximate start time from the starting window */
     if ((m_startWindowBegin == -1) ||
@@ -93,7 +93,7 @@ void AutoRecording::SetStartWindowBegin(int32_t start)
 
 time_t AutoRecording::GetStop() const
 {
-  if (Settings::GetInstance().GetAutorecApproxTime())
+  if (Settings::GetInstance2().GetAutorecApproxTime())
   {
     /* Tvh doesn't have an approximate stop time => "any time" */
     return 0;

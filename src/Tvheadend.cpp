@@ -37,10 +37,10 @@ using namespace tvheadend::utilities;
 
 CTvheadend::CTvheadend(PVR_PROPERTIES *pvrProps)
   : m_streamchange(false), m_vfs(m_conn),
-    m_queue((size_t)-1), m_asyncState(Settings::GetInstance().GetResponseTimeout()),
+    m_queue((size_t)-1), m_asyncState(Settings::GetInstance2().GetResponseTimeout()),
     m_timeRecordings(m_conn), m_autoRecordings(m_conn), m_epgMaxDays(pvrProps->iEpgMaxDays)
 {
-  for (int i = 0; i < 1 || i < Settings::GetInstance().GetTotalTuners(); i++)
+  for (int i = 0; i < 1 || i < Settings::GetInstance2().GetTotalTuners(); i++)
   {
     m_dmx.push_back(new CHTSPDemuxer(m_conn));
   }
@@ -343,7 +343,7 @@ PVR_ERROR CTvheadend::SendDvrDelete ( uint32_t id, const char *method )
 
   /* Send and wait a bit longer than usual */
   if ((m = m_conn.SendAndWait(method, m,
-            std::max(30000, Settings::GetInstance().GetResponseTimeout()))) == NULL)
+            std::max(30000, Settings::GetInstance2().GetResponseTimeout()))) == NULL)
     return PVR_ERROR_SERVER_ERROR;
 
   /* Check for error */
@@ -631,7 +631,7 @@ PVR_ERROR CTvheadend::SetLifetime ( const PVR_RECORDING &rec )
 
 PVR_ERROR CTvheadend::SetPlayCount ( const PVR_RECORDING &rec, int playCount )
 {
-  if (m_conn.GetProtocol() < 27 || !Settings::GetInstance().GetDvrPlayStatus())
+  if (m_conn.GetProtocol() < 27 || !Settings::GetInstance2().GetDvrPlayStatus())
     return PVR_ERROR_NOT_IMPLEMENTED;
 
   Logger::Log(LogLevel::LEVEL_DEBUG, "Setting play count to %i for recording %s", playCount, rec.strRecordingId);
@@ -645,7 +645,7 @@ PVR_ERROR CTvheadend::SetPlayCount ( const PVR_RECORDING &rec, int playCount )
 
 PVR_ERROR CTvheadend::SetPlayPosition ( const PVR_RECORDING &rec, int playPosition )
 {
-  if (m_conn.GetProtocol() < 27 || !Settings::GetInstance().GetDvrPlayStatus())
+  if (m_conn.GetProtocol() < 27 || !Settings::GetInstance2().GetDvrPlayStatus())
     return PVR_ERROR_NOT_IMPLEMENTED;
 
   Logger::Log(LogLevel::LEVEL_DEBUG, "Setting play position to %i for recording %s", playPosition, rec.strRecordingId);
@@ -659,7 +659,7 @@ PVR_ERROR CTvheadend::SetPlayPosition ( const PVR_RECORDING &rec, int playPositi
 
 int CTvheadend::GetPlayPosition ( const PVR_RECORDING &rec )
 {
-  if (m_conn.GetProtocol() < 27 || !Settings::GetInstance().GetDvrPlayStatus())
+  if (m_conn.GetProtocol() < 27 || !Settings::GetInstance2().GetDvrPlayStatus())
     return -1;
 
   const auto &it = m_recordings.find(atoi(rec.strRecordingId));
@@ -691,11 +691,11 @@ struct TimerType : PVR_TIMER_TYPE
     iId                              = id;
     iAttributes                      = attributes;
     iPrioritiesSize                  = priorityValues.size();
-    iPrioritiesDefault               = Settings::GetInstance().GetDvrPriority();
+    iPrioritiesDefault               = Settings::GetInstance2().GetDvrPriority();
     iPreventDuplicateEpisodesSize    = dupEpisodesValues.size();
-    iPreventDuplicateEpisodesDefault = Settings::GetInstance().GetDvrDupdetect();
+    iPreventDuplicateEpisodesDefault = Settings::GetInstance2().GetDvrDupdetect();
     iLifetimesSize                   = lifetimeValues.size();
-    iLifetimesDefault                = LifetimeMapper::TvhToKodi(Settings::GetInstance().GetDvrLifetime());
+    iLifetimesDefault                = LifetimeMapper::TvhToKodi(Settings::GetInstance2().GetDvrLifetime());
 
     strncpy(strDescription, description.c_str(), sizeof(strDescription) - 1);
 
@@ -908,7 +908,7 @@ PVR_ERROR CTvheadend::GetTimerTypes ( PVR_TIMER_TYPE types[], int *size )
         PVR_TIMER_TYPE_SUPPORTS_ANY_CHANNEL        |
         PVR_TIMER_TYPE_REQUIRES_EPG_SERIESLINK_ON_CREATE;
 
-    if (!Settings::GetInstance().GetAutorecApproxTime())
+    if (!Settings::GetInstance2().GetAutorecApproxTime())
     {
       /* We need the end time to represent the end of the tvh starting window */
       TIMER_REPEATING_SERIESLINK_ATTRIBS |= PVR_TIMER_TYPE_SUPPORTS_END_TIME;
@@ -950,7 +950,7 @@ PVR_ERROR CTvheadend::GetTimerTypes ( PVR_TIMER_TYPE types[], int *size )
     TIMER_REPEATING_EPG_ATTRIBS |= PVR_TIMER_TYPE_SUPPORTS_RECORD_ONLY_NEW_EPISODES;
   }
 
-  if (!Settings::GetInstance().GetAutorecApproxTime())
+  if (!Settings::GetInstance2().GetAutorecApproxTime())
   {
     /* We need the end time to represent the end of the tvh starting window */
     TIMER_REPEATING_EPG_ATTRIBS |= PVR_TIMER_TYPE_SUPPORTS_END_TIME;
@@ -1389,7 +1389,7 @@ PVR_ERROR CTvheadend::GetEPGForChannel
 
 
   /* Note: Nothing to do if "async epg transfer" is enabled as all changes are pushed live to Kodi, then. */
-  if (!Settings::GetInstance().GetAsyncEpg())
+  if (!Settings::GetInstance2().GetAsyncEpg())
   {
     /* Build message */
     htsmsg_t *msg = htsmsg_create_map();
@@ -1445,7 +1445,7 @@ PVR_ERROR CTvheadend::SetEPGTimeFrame(int iDays)
   {
     m_epgMaxDays = iDays;
 
-    if (Settings::GetInstance().GetAsyncEpg())
+    if (Settings::GetInstance2().GetAsyncEpg())
     {
       Logger::Log(LogLevel::LEVEL_TRACE, "reconnecting to synchronize epg data. epg max time: old = %d, new = %d", m_epgMaxDays, iDays);
       m_conn.Disconnect(); // reconnect to synchronize epg data
@@ -1490,7 +1490,7 @@ bool CTvheadend::Connected ( void )
   m_asyncState.SetState(ASYNC_CHN);
   
   msg = htsmsg_create_map();
-  if (Settings::GetInstance().GetAsyncEpg())
+  if (Settings::GetInstance2().GetAsyncEpg())
   {
     Logger::Log(LogLevel::LEVEL_INFO, "request async EPG (%ld)", (long)m_epgMaxDays);
     htsmsg_add_u32(msg, "epg", 1);
@@ -1685,7 +1685,7 @@ void CTvheadend::SyncCompleted ( void )
   QueryAvailableProfiles();
 
   /* Show a notification if the profile is not available */
-  std::string streamingProfile = Settings::GetInstance().GetStreamingProfile();
+  std::string streamingProfile = Settings::GetInstance2().GetStreamingProfile();
 
   if (!streamingProfile.empty() && !HasStreamingProfile(streamingProfile))
   {
@@ -1755,7 +1755,7 @@ void CTvheadend::SyncDvrCompleted ( void )
 void CTvheadend::SyncEpgCompleted ( void )
 {
   /* check state engine */
-  if (!Settings::GetInstance().GetAsyncEpg())
+  if (!Settings::GetInstance2().GetAsyncEpg())
   {
     m_asyncState.SetState(ASYNC_DONE);
     return;
@@ -2566,8 +2566,8 @@ DemuxPacket* CTvheadend::DemuxRead ( void )
     else
     {
       /* Close "expired" subscriptions */
-      if (dmx->GetChannelId() && Settings::GetInstance().GetPreTunerCloseDelay() &&
-          dmx->GetLastUse() + Settings::GetInstance().GetPreTunerCloseDelay() < time(NULL))
+      if (dmx->GetChannelId() && Settings::GetInstance2().GetPreTunerCloseDelay() &&
+          dmx->GetLastUse() + Settings::GetInstance2().GetPreTunerCloseDelay() < time(NULL))
       {
         Logger::Log(LogLevel::LEVEL_TRACE, "untuning channel %u on subscription %u",
                  m_channels[dmx->GetChannelId()].GetNum(), dmx->GetSubscriptionId());

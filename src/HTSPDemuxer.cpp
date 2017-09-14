@@ -171,7 +171,7 @@ bool CHTSPDemuxer::Seek
   /* Wait for time */
   CLockObject lock(m_conn.Mutex());
 
-  if (!m_seekCond.Wait(m_conn.Mutex(), m_seekTime, Settings::GetInstance().GetResponseTimeout()))
+  if (!m_seekCond.Wait(m_conn.Mutex(), m_seekTime, Settings::GetInstance2().GetResponseTimeout()))
   {
     Logger::Log(LogLevel::LEVEL_ERROR, "failed to get subscriptionSeek response");
     m_seeking = false;
@@ -337,7 +337,7 @@ bool CHTSPDemuxer::IsRealTimeStream() const
    * we want the calculation to be consistent */
   CLockObject lock(m_mutex);
 
-  /* Handle as real time when reading close to the EOF (10000000µs - 10s) */
+  /* Handle as real time when reading close to the EOF (10000000ï¿½s - 10s) */
   return (m_timeshiftStatus.shift < 10000000);
 }
 

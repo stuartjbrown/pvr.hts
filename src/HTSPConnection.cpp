@@ -321,7 +321,7 @@ bool CHTSPConnection::ReadMessage ( void )
   Logger::Log(LogLevel::LEVEL_TRACE, "receive message [%s]", method);
 
   /* Pass (if return is true, message is finished) */
-  if (tvh->ProcessMessage(method, msg))
+  if (tvh2->ProcessMessage(method, msg))
     htsmsg_destroy(msg);
   // TODO: maybe a copy should be made if it needs to be kept?
 
@@ -582,7 +582,7 @@ void CHTSPConnection::Register ( void )
 
     /* Rebuild state */
     Logger::Log(LogLevel::LEVEL_DEBUG, "rebuilding state");
-    if (!tvh->Connected())
+    if (!tvh2->Connected())
       goto fail;
 
     Logger::Log(LogLevel::LEVEL_DEBUG, "registered");
@@ -624,7 +624,7 @@ void* CHTSPConnection::Process ( void )
       CLockObject lock(m_mutex);
       if (m_socket)
         delete m_socket;
-      tvh->Disconnected();
+      tvh2->Disconnected();
       m_socket = new CTcpSocket(host.c_str(), port);
       m_ready  = false;
       m_seq    = 0;

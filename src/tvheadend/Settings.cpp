@@ -49,7 +49,10 @@ const bool        Settings::DEFAULT_DVR_PLAYSTATUS      = true;
 void Settings::ReadSettings()
 {
   /* Connection */
+
+  Logger::Log(LogLevel::LEVEL_INFO, "OriginalHostname : '%s'", m_strHostname.c_str());
   SetHostname(ReadStringSetting("host", DEFAULT_HOST));
+  Logger::Log(LogLevel::LEVEL_INFO, "NewHostname : '%s'", m_strHostname.c_str());
   SetPortHTSP(ReadIntSetting("htsp_port", DEFAULT_HTSP_PORT));
   SetPortHTTP(ReadIntSetting("http_port", DEFAULT_HTTP_PORT));
   SetUsername(ReadStringSetting("user", DEFAULT_USERNAME));
@@ -164,18 +167,24 @@ ADDON_STATUS Settings::SetSetting(const std::string &key, const void *value)
 std::string Settings::ReadStringSetting(const std::string &key, const std::string &def)
 {
   char value[1024];
-  if (XBMC->GetSetting(key.c_str(), value))
+  if (XBMC->GetSetting(key.c_str(), value)) {
+    Logger::Log(LogLevel::LEVEL_INFO, "ReadStringSetting - %s:'%s'", key.c_str(), value);
     return value;
+  }
 
+  Logger::Log(LogLevel::LEVEL_INFO, "ReadStringSetting (default) - %s:'%s'", key.c_str(), value);
   return def;
 }
 
 int Settings::ReadIntSetting(const std::string &key, int def)
 {
   int value;
-  if (XBMC->GetSetting(key.c_str(), &value))
+  if (XBMC->GetSetting(key.c_str(), &value)) {
+    Logger::Log(LogLevel::LEVEL_INFO, "ReadIntSetting - %s:'%d'", key.c_str(), value);
     return value;
+  }
 
+  Logger::Log(LogLevel::LEVEL_INFO, "ReadIntSetting (default) - %s:'%d'", key.c_str(), value);
   return def;
 }
 

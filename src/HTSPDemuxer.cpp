@@ -91,7 +91,7 @@ bool CHTSPDemuxer::Open ( uint32_t channelId, enum eSubscriptionWeight weight )
 
   /* Open new subscription */
   m_subscription.SendSubscribe(channelId, weight);
-  
+
   /* Reset status */
   ResetStatus();
 
@@ -100,7 +100,7 @@ bool CHTSPDemuxer::Open ( uint32_t channelId, enum eSubscriptionWeight weight )
     m_subscription.SendUnsubscribe();
   else
     m_lastUse.store(time(nullptr));
-  
+
   return m_subscription.IsActive();
 }
 
@@ -123,7 +123,7 @@ DemuxPacket *CHTSPDemuxer::Read ( void )
     return pkt;
   }
   Logger::Log(LogLevel::LEVEL_TRACE, "demux read nothing");
-  
+
   return PVR->AllocateDemuxPacket(0);
 }
 
@@ -155,7 +155,7 @@ void CHTSPDemuxer::Abort ( void )
   ResetStatus();
 }
 
-bool CHTSPDemuxer::Seek 
+bool CHTSPDemuxer::Seek
   ( double time, bool _unused(backwards), double *startpts )
 {
   if (!m_subscription.IsActive())
@@ -171,14 +171,14 @@ bool CHTSPDemuxer::Seek
   /* Wait for time */
   CLockObject lock(m_conn.Mutex());
 
-  if (!m_seekCond.Wait(m_conn.Mutex(), m_seekTime, Settings::GetInstance().GetResponseTimeout()))
+  if (!m_seekCond.Wait(m_conn.Mutex(), m_seekTime, Settings::GetInstance2().GetResponseTimeout()))
   {
     Logger::Log(LogLevel::LEVEL_ERROR, "failed to get subscriptionSeek response");
     m_seeking = false;
     Flush(); /* try to resync */
     return false;
   }
-  
+
   m_seeking = false;
   if (m_seekTime == INVALID_SEEKTIME)
     return false;
@@ -224,7 +224,7 @@ PVR_ERROR CHTSPDemuxer::CurrentStreams ( PVR_STREAM_PROPERTIES *props )
 PVR_ERROR CHTSPDemuxer::CurrentSignal ( PVR_SIGNAL_STATUS &sig )
 {
   CLockObject lock(m_mutex);
-  
+
   memset(&sig, 0, sizeof(sig));
 
   strncpy(sig.strAdapterName,   m_sourceInfo.si_adapter.c_str(),
@@ -237,7 +237,7 @@ PVR_ERROR CHTSPDemuxer::CurrentSignal ( PVR_SIGNAL_STATUS &sig )
           sizeof(sig.strProviderName) - 1);
   strncpy(sig.strMuxName,       m_sourceInfo.si_mux.c_str(),
           sizeof(sig.strMuxName) - 1);
-  
+
   sig.iSNR      = m_signalInfo.fe_snr;
   sig.iSignal   = m_signalInfo.fe_signal;
   sig.iBER      = m_signalInfo.fe_ber;
@@ -316,7 +316,7 @@ bool CHTSPDemuxer::IsRealTimeStream() const
    * we want the calculation to be consistent */
   CLockObject lock(m_mutex);
 
-  /* Handle as real time when reading close to the EOF (10000000µs - 10s) */
+  /* Handle as real time when reading close to the EOF (10000000ï¿½s - 10s) */
   return (m_timeshiftStatus.shift < 10000000);
 }
 
@@ -372,14 +372,14 @@ void CHTSPDemuxer::ParseMuxPacket ( htsmsg_t *m )
   DemuxPacket *pkt;
   char        _unused(type) = 0;
   int         ignore;
-  
+
   /* Ignore packets while switching channels */
   if (!m_subscription.IsActive())
   {
     Logger::Log(LogLevel::LEVEL_DEBUG, "Ignored mux packet due to channel switch");
     return;
   }
-  
+
   /* Validate fields */
   if (htsmsg_get_u32(m, "stream", &idx) ||
       htsmsg_get_bin(m, "payload", &bin, &binlen))
@@ -408,7 +408,7 @@ void CHTSPDemuxer::ParseMuxPacket ( htsmsg_t *m )
   /* Duration */
   if (!htsmsg_get_u32(m, "duration", &u32))
     pkt->duration = TVH_TO_DVD_TIME(u32);
-  
+
   /* Timestamps */
   if (!htsmsg_get_s64(m, "dts", &s64))
     pkt->dts      = TVH_TO_DVD_TIME(s64);
@@ -471,7 +471,7 @@ void CHTSPDemuxer::ParseSubscriptionStart ( htsmsg_t *m )
     /* Find stream */
     m_streamStat[idx] = 0;
     Logger::Log(LogLevel::LEVEL_DEBUG, "demux subscription start");
-    
+
     CodecDescriptor codecDescriptor = CodecDescriptor::GetCodecByName(type);
     xbmc_codec_t codec = codecDescriptor.Codec();
 
@@ -499,7 +499,7 @@ void CHTSPDemuxer::ParseSubscriptionStart ( htsmsg_t *m )
           m_streams.stream[count].iCodecType == XBMC_CODEC_TYPE_AUDIO)
       {
         const char *language;
-        
+
         if ((language = htsmsg_get_str(&f->hmf_msg, "language")) != NULL)
           strncpy(m_streams.stream[count].strLanguage, language, sizeof(m_streams.stream[count].strLanguage) - 1);
       }
@@ -518,26 +518,26 @@ void CHTSPDemuxer::ParseSubscriptionStart ( htsmsg_t *m )
       {
         m_streams.stream[count].iWidth  = htsmsg_get_u32_or_default(&f->hmf_msg, "width", 0);
         m_streams.stream[count].iHeight = htsmsg_get_u32_or_default(&f->hmf_msg, "height", 0);
-        
-        /* Ignore this message if the stream details haven't been determined 
-           yet, a new message will be sent once they have. This is fixed in 
+
+        /* Ignore this message if the stream details haven't been determined
+           yet, a new message will be sent once they have. This is fixed in
            some versions of tvheadend and is here for backward compatibility. */
         if (m_streams.stream[count].iWidth == 0 || m_streams.stream[count].iHeight == 0)
         {
           Logger::Log(LogLevel::LEVEL_DEBUG, "Ignoring subscriptionStart, stream details missing");
           return;
         }
-        
+
         /* Setting aspect ratio to zero will cause XBMC to handle changes in it */
         m_streams.stream[count].fAspect = 0.0f;
-        
+
         if ((u32 = htsmsg_get_u32_or_default(&f->hmf_msg, "duration", 0)) > 0)
         {
           m_streams.stream[count].iFPSScale = u32;
           m_streams.stream[count].iFPSRate  = DVD_TIME_BASE;
         }
       }
-        
+
       Logger::Log(LogLevel::LEVEL_DEBUG, "  id: %d, type %s, codec: %u", idx, type, m_streams.stream[count].iCodecId);
       count++;
     }
@@ -557,7 +557,7 @@ void CHTSPDemuxer::ParseSubscriptionStart ( htsmsg_t *m )
 void CHTSPDemuxer::ParseSourceInfo ( htsmsg_t *m )
 {
   const char *str;
-  
+
   /* Ignore */
   if (!m) return;
 

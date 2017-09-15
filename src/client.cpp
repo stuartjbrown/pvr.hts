@@ -60,7 +60,7 @@ extern "C" {
 
 void ADDON_ReadSettings(void)
 {
-  Settings::GetInstance().ReadSettings();
+  Settings::GetInstance2().ReadSettings();
 }
 
 ADDON_STATUS ADDON_Create(void* hdl, void* props)
@@ -72,7 +72,7 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
   XBMC  = new CHelper_libXBMC_addon;
   CODEC = new CHelper_libXBMC_codec;
   PVR   = new CHelper_libXBMC_pvr;
-  
+
   if (!XBMC->RegisterMe(hdl) ||
       !CODEC->RegisterMe(hdl) || !PVR->RegisterMe(hdl))
   {
@@ -102,7 +102,7 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
     }
 
     /* Don't log trace messages unless told so */
-    if (level == LogLevel::LEVEL_TRACE && !Settings::GetInstance().GetTraceDebug())
+    if (level == LogLevel::LEVEL_TRACE && !Settings::GetInstance2().GetTraceDebug())
       return;
 
     XBMC->Log(addonLevel, "%s", message);
@@ -153,7 +153,7 @@ ADDON_STATUS ADDON_SetSetting
   (const char *settingName, const void *settingValue)
 {
   CLockObject lock(g_mutex);
-  m_CurStatus = Settings::GetInstance().SetSetting(settingName, settingValue);
+  m_CurStatus = Settings::GetInstance2().SetSetting(settingName, settingValue);
   return m_CurStatus;
 }
 
@@ -247,7 +247,7 @@ const char *GetConnectionString(void)
 
 const char *GetBackendHostname(void)
 {
-  return Settings::GetInstance().GetConstCharHostname();
+  return Settings::GetInstance2().GetConstCharHostname();
 }
 
 PVR_ERROR GetDriveSpace(long long *iTotal, long long *iUsed)
@@ -479,7 +479,7 @@ PVR_ERROR UpdateTimer(const PVR_TIMER &timer)
 {
   return tvh->UpdateTimer(timer);
 }
- 
+
 /* **************************************************************************
  * Recording VFS
  * *************************************************************************/
@@ -526,7 +526,7 @@ PVR_ERROR SetRecordingPlayCount
 {
   return PVR_ERROR_NOT_IMPLEMENTED;
 }
-PVR_ERROR SetRecordingLastPlayedPosition  
+PVR_ERROR SetRecordingLastPlayedPosition
   (const PVR_RECORDING &_unused(recording), int _unused(lastplayedposition))
 {
   return PVR_ERROR_NOT_IMPLEMENTED;

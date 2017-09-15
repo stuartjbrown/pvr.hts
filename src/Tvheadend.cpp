@@ -36,10 +36,10 @@ using namespace tvheadend::utilities;
 
 CTvheadend::CTvheadend(PVR_PROPERTIES *pvrProps)
   : m_streamchange(false), m_vfs(m_conn),
-    m_queue((size_t)-1), m_asyncState(Settings::GetInstance().GetResponseTimeout()),
+    m_queue((size_t)-1), m_asyncState(Settings::GetInstance2().GetResponseTimeout()),
     m_timeRecordings(m_conn), m_autoRecordings(m_conn), m_epgMaxDays(pvrProps->iEpgMaxDays)
 {
-  for (int i = 0; i < 1 || i < Settings::GetInstance().GetTotalTuners(); i++)
+  for (int i = 0; i < 1 || i < Settings::GetInstance2().GetTotalTuners(); i++)
   {
     m_dmx.push_back(new CHTSPDemuxer(m_conn));
   }
@@ -176,7 +176,7 @@ int CTvheadend::GetTagCount ( void )
 {
   if (!m_asyncState.WaitForState(ASYNC_DVR))
     return 0;
-  
+
   CLockObject lock(m_mutex);
   return m_tags.size();
 }
@@ -185,7 +185,7 @@ PVR_ERROR CTvheadend::GetTags ( ADDON_HANDLE handle, bool bRadio )
 {
   if (!m_asyncState.WaitForState(ASYNC_DVR))
     return PVR_ERROR_FAILED;
-  
+
   std::vector<PVR_CHANNEL_GROUP> tags;
   {
     CLockObject lock(m_mutex);
@@ -215,7 +215,7 @@ PVR_ERROR CTvheadend::GetTags ( ADDON_HANDLE handle, bool bRadio )
     /* Callback. */
     PVR->TransferChannelGroup(handle, &(*it));
   }
-  
+
   return PVR_ERROR_NO_ERROR;
 }
 
@@ -224,7 +224,7 @@ PVR_ERROR CTvheadend::GetTagMembers
 {
   if (!m_asyncState.WaitForState(ASYNC_DVR))
     return PVR_ERROR_FAILED;
-  
+
   std::vector<PVR_CHANNEL_GROUP_MEMBER> gms;
   {
     CLockObject lock(m_mutex);
@@ -278,7 +278,7 @@ int CTvheadend::GetChannelCount ( void )
 {
   if (!m_asyncState.WaitForState(ASYNC_DVR))
     return 0;
-  
+
   CLockObject lock(m_mutex);
   return m_channels.size();
 }
@@ -287,11 +287,11 @@ PVR_ERROR CTvheadend::GetChannels ( ADDON_HANDLE handle, bool radio )
 {
   if (!m_asyncState.WaitForState(ASYNC_DVR))
     return PVR_ERROR_FAILED;
-  
+
   std::vector<PVR_CHANNEL> channels;
   {
     CLockObject lock(m_mutex);
-    
+
     for (const auto &entry : m_channels)
     {
       const auto &channel = entry.second;
@@ -342,7 +342,7 @@ PVR_ERROR CTvheadend::SendDvrDelete ( uint32_t id, const char *method )
 
   /* Send and wait a bit longer than usual */
   if ((m = m_conn.SendAndWait(method, m,
-            std::max(30000, Settings::GetInstance().GetResponseTimeout()))) == NULL)
+            std::max(30000, Settings::GetInstance2().GetResponseTimeout()))) == NULL)
     return PVR_ERROR_SERVER_ERROR;
 
   /* Check for error */
@@ -388,8 +388,8 @@ int CTvheadend::GetRecordingCount ( void )
   CLockObject lock(m_mutex);
 
   return std::count_if(
-    m_recordings.cbegin(), 
-    m_recordings.cend(), 
+    m_recordings.cbegin(),
+    m_recordings.cend(),
     [](const RecordingMapEntry &entry)
   {
     return entry.second.IsRecording();
@@ -400,7 +400,7 @@ PVR_ERROR CTvheadend::GetRecordings ( ADDON_HANDLE handle )
 {
   if (!m_asyncState.WaitForState(ASYNC_EPG))
     return PVR_ERROR_FAILED;
-  
+
   std::vector<PVR_RECORDING> recs;
   {
     CLockObject lock(m_mutex);
@@ -509,7 +509,7 @@ PVR_ERROR CTvheadend::GetRecordingEdl
   htsmsg_t *list;
   htsmsg_field_t *f;
   int idx;
-  
+
   /* Build request */
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "id", atoi(rec.strRecordingId));
@@ -519,7 +519,7 @@ PVR_ERROR CTvheadend::GetRecordingEdl
   /* Send and Wait */
   {
     CLockObject lock(m_conn.Mutex());
-    
+
     if ((m = m_conn.SendAndWait("getDvrCutpoints", m)) == NULL)
       return PVR_ERROR_SERVER_ERROR;
   }
@@ -540,7 +540,7 @@ PVR_ERROR CTvheadend::GetRecordingEdl
 
     if (f->hmf_type != HMF_MAP)
       continue;
-  
+
     /* Full */
     if (idx >= *num)
       break;
@@ -577,7 +577,7 @@ PVR_ERROR CTvheadend::GetRecordingEdl
 
     Logger::Log(LogLevel::LEVEL_DEBUG, "edl start:%d end:%d action:%d", start, end, type);
   }
-  
+
   *num = idx;
   htsmsg_destroy(m);
   return PVR_ERROR_NO_ERROR;
@@ -617,11 +617,11 @@ struct TimerType : PVR_TIMER_TYPE
     iId                              = id;
     iAttributes                      = attributes;
     iPrioritiesSize                  = priorityValues.size();
-    iPrioritiesDefault               = Settings::GetInstance().GetDvrPriority();
+    iPrioritiesDefault               = Settings::GetInstance2().GetDvrPriority();
     iPreventDuplicateEpisodesSize    = dupEpisodesValues.size();
-    iPreventDuplicateEpisodesDefault = Settings::GetInstance().GetDvrDupdetect();
+    iPreventDuplicateEpisodesDefault = Settings::GetInstance2().GetDvrDupdetect();
     iLifetimesSize                   = lifetimeValues.size();
-    iLifetimesDefault                = Settings::GetInstance().GetDvrLifetime();
+    iLifetimesDefault                = Settings::GetInstance2().GetDvrLifetime();
 
     strncpy(strDescription, description.c_str(), sizeof(strDescription) - 1);
 
@@ -832,7 +832,7 @@ PVR_ERROR CTvheadend::GetTimerTypes ( PVR_TIMER_TYPE types[], int *size )
     TIMER_REPEATING_EPG_ATTRIBS |= PVR_TIMER_TYPE_SUPPORTS_RECORD_ONLY_NEW_EPISODES;
   }
 
-  if (!Settings::GetInstance().GetAutorecApproxTime())
+  if (!Settings::GetInstance2().GetAutorecApproxTime())
   {
     /* We need the end time to represent the end of the tvh starting window */
     TIMER_REPEATING_EPG_ATTRIBS |= PVR_TIMER_TYPE_SUPPORTS_END_TIME;
@@ -868,7 +868,7 @@ int CTvheadend::GetTimerCount ( void )
 {
   if (!m_asyncState.WaitForState(ASYNC_EPG))
     return 0;
-  
+
   CLockObject lock(m_mutex);
 
   // Normal timers
@@ -937,7 +937,7 @@ PVR_ERROR CTvheadend::GetTimers ( ADDON_HANDLE handle )
 {
   if (!m_asyncState.WaitForState(ASYNC_EPG))
     return PVR_ERROR_FAILED;
-  
+
   std::vector<PVR_TIMER> timers;
   {
     CLockObject lock(m_mutex);
@@ -1273,7 +1273,7 @@ PVR_ERROR CTvheadend::GetEpg
 
 
   /* Note: Nothing to do if "async epg transfer" is enabled as all changes are pushed live to Kodi, then. */
-  if (!Settings::GetInstance().GetAsyncEpg())
+  if (!Settings::GetInstance2().GetAsyncEpg())
   {
     /* Build message */
     htsmsg_t *msg = htsmsg_create_map();
@@ -1283,7 +1283,7 @@ PVR_ERROR CTvheadend::GetEpg
     /* Send and Wait */
     {
       CLockObject lock(m_conn.Mutex());
-      
+
       if ((msg = m_conn.SendAndWait0("getEvents", msg)) == NULL)
         return PVR_ERROR_SERVER_ERROR;
     }
@@ -1329,7 +1329,7 @@ PVR_ERROR CTvheadend::SetEPGTimeFrame(int iDays)
   {
     m_epgMaxDays = iDays;
 
-    if (Settings::GetInstance().GetAsyncEpg())
+    if (Settings::GetInstance2().GetAsyncEpg())
     {
       Logger::Log(LogLevel::LEVEL_TRACE, "reconnecting to synchronize epg data. epg max time: old = %d, new = %d", m_epgMaxDays, iDays);
       m_conn.Disconnect(); // reconnect to synchronize epg data
@@ -1372,9 +1372,9 @@ bool CTvheadend::Connected ( void )
 
   /* Request Async data, first is channels */
   m_asyncState.SetState(ASYNC_CHN);
-  
+
   msg = htsmsg_create_map();
-  if (Settings::GetInstance().GetAsyncEpg())
+  if (Settings::GetInstance2().GetAsyncEpg())
   {
     Logger::Log(LogLevel::LEVEL_INFO, "request async EPG (%ld)", (long)m_epgMaxDays);
     htsmsg_add_u32(msg, "epg", 1);
@@ -1419,7 +1419,7 @@ bool CTvheadend::ProcessMessage ( const char *method, htsmsg_t *msg )
   m_queue.Push(CHTSPMessage(method, msg));
   return false;
 }
-  
+
 void* CTvheadend::Process ( void )
 {
   CHTSPMessage msg;
@@ -1518,7 +1518,7 @@ void* CTvheadend::Process ( void )
       eventsCopy = m_events;
       m_events.clear();
     }
-  
+
     /* Manual delete rather than waiting */
     htsmsg_destroy(msg.m_msg);
     msg.m_msg = NULL;
@@ -1569,7 +1569,7 @@ void CTvheadend::SyncCompleted ( void )
   QueryAvailableProfiles();
 
   /* Show a notification if the profile is not available */
-  std::string streamingProfile = Settings::GetInstance().GetStreamingProfile();
+  std::string streamingProfile = Settings::GetInstance2().GetStreamingProfile();
 
   if (!streamingProfile.empty() && !HasStreamingProfile(streamingProfile))
   {
@@ -1606,7 +1606,7 @@ void CTvheadend::SyncChannelsCompleted ( void )
   });
 
   TriggerChannelUpdate();
-  
+
   /* Next */
   m_asyncState.SetState(ASYNC_DVR);
 }
@@ -1639,7 +1639,7 @@ void CTvheadend::SyncDvrCompleted ( void )
 void CTvheadend::SyncEpgCompleted ( void )
 {
   /* check state engine */
-  if (!Settings::GetInstance().GetAsyncEpg())
+  if (!Settings::GetInstance2().GetAsyncEpg())
   {
     m_asyncState.SetState(ASYNC_DONE);
     return;
@@ -1709,7 +1709,7 @@ void CTvheadend::ParseTagAddOrUpdate ( htsmsg_t *msg, bool bAdd )
   /* Locate object */
   auto &existingTag = m_tags[u32];
   existingTag.SetDirty(false);
-  
+
   /* Create new object */
   Tag tag;
   tag.SetId(u32);
@@ -1765,7 +1765,7 @@ void CTvheadend::ParseTagDelete ( htsmsg_t *msg )
     return;
   }
   Logger::Log(LogLevel::LEVEL_DEBUG, "delete tag %u", u32);
-  
+
   /* Erase */
   m_tags.erase(u32);
   TriggerChannelGroupsUpdate();
@@ -1813,7 +1813,7 @@ void CTvheadend::ParseChannelAddOrUpdate ( htsmsg_t *msg, bool bAdd )
   }
   else if (!channel.GetNum())
     channel.SetNum(GetNextUnnumberedChannelNumber());
-  
+
   /* ATSC subchannel number */
   if (!htsmsg_get_u32(msg, "channelNumberMinor", &u32))
     channel.SetNumMinor(u32);
@@ -1892,7 +1892,7 @@ void CTvheadend::ParseChannelDelete ( htsmsg_t *msg )
     return;
   }
   Logger::Log(LogLevel::LEVEL_DEBUG, "delete channel %u", u32);
-  
+
   /* Erase */
   m_channels.erase(u32);
   m_channelTuningPredictor.RemoveChannel(u32);
@@ -2105,7 +2105,7 @@ void CTvheadend::ParseRecordingAddOrUpdate ( htsmsg_t *msg, bool bAdd )
     else
       rec.SetError(str);
   }
-  
+
   /* A running recording will have an active subscription assigned to it */
   if (rec.GetState() == PVR_TIMER_STATE_RECORDING)
   {
@@ -2147,7 +2147,7 @@ void CTvheadend::ParseRecordingDelete ( htsmsg_t *msg )
     return;
   }
   Logger::Log(LogLevel::LEVEL_DEBUG, "delete recording %u", u32);
-  
+
   /* Erase */
   m_recordings.erase(u32);
 
@@ -2226,7 +2226,7 @@ bool CTvheadend::ParseEvent ( htsmsg_t *msg, bool bAdd, Event &evt )
   /* Add optional recording link */
   if (!htsmsg_get_u32(msg, "dvrId", &u32))
     evt.SetRecordingId(u32);
-  
+
   return true;
 }
 
@@ -2443,8 +2443,8 @@ DemuxPacket* CTvheadend::DemuxRead ( void )
     else
     {
       /* Close "expired" subscriptions */
-      if (dmx->GetChannelId() && Settings::GetInstance().GetPreTunerCloseDelay() &&
-          dmx->GetLastUse() + Settings::GetInstance().GetPreTunerCloseDelay() < time(NULL))
+      if (dmx->GetChannelId() && Settings::GetInstance2().GetPreTunerCloseDelay() &&
+          dmx->GetLastUse() + Settings::GetInstance2().GetPreTunerCloseDelay() < time(NULL))
       {
         Logger::Log(LogLevel::LEVEL_TRACE, "untuning channel %u on subscription %u",
                  m_channels[dmx->GetChannelId()].GetNum(), dmx->GetSubscriptionId());
@@ -2525,4 +2525,3 @@ bool CTvheadend::DemuxIsRealTimeStream() const
 {
   return m_dmx_active->IsRealTimeStream();
 }
-

@@ -57,10 +57,10 @@ namespace tvheadend {
     /**
      * Singleton getter for the instance
      */
-    static Settings& GetInstance()
+    static Settings& GetInstance2()
     {
-      static Settings settings;
-      return settings;
+      static Settings settings2;
+      return settings2;
     }
 
     /**

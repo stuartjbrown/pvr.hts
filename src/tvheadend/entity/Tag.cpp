@@ -83,7 +83,7 @@ bool Tag::ContainsChannelType(channel_type_t eType) const
 {
   std::vector<uint32_t>::const_iterator it;
   Channels::const_iterator cit;
-  const Channels& channels = tvh->GetChannels();
+  const Channels& channels = tvh2->GetChannels();
 
   for (it = m_channels.begin(); it != m_channels.end(); ++it)
   {

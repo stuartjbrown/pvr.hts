@@ -47,13 +47,13 @@ public:
     CodecDescriptor retVal;
     // some of Tvheadend's and VDR's codec names don't match ffmpeg's, so translate them to something ffmpeg understands
     if (!strcmp(strCodecName, "MPEG2AUDIO"))
-      retVal = CodecDescriptor(CODEC->GetCodecByName("MP2"), strCodecName);
+      retVal = CodecDescriptor(CODEC2->GetCodecByName("MP2"), strCodecName);
     else if (!strcmp(strCodecName, "MPEGTS"))
-      retVal = CodecDescriptor(CODEC->GetCodecByName("MPEG2VIDEO"), strCodecName);
+      retVal = CodecDescriptor(CODEC2->GetCodecByName("MPEG2VIDEO"), strCodecName);
     else if (!strcmp(strCodecName, "TEXTSUB"))
-      retVal = CodecDescriptor(CODEC->GetCodecByName("TEXT"), strCodecName);
+      retVal = CodecDescriptor(CODEC2->GetCodecByName("TEXT"), strCodecName);
     else
-      retVal = CodecDescriptor(CODEC->GetCodecByName(strCodecName), strCodecName);
+      retVal = CodecDescriptor(CODEC2->GetCodecByName(strCodecName), strCodecName);
 
     return retVal;
   }

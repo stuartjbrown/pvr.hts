@@ -124,7 +124,7 @@ DemuxPacket *CHTSPDemuxer::Read ( void )
   }
   Logger::Log(LogLevel::LEVEL_TRACE, "demux read nothing");
 
-  return PVR->AllocateDemuxPacket(0);
+  return PVR2->AllocateDemuxPacket(0);
 }
 
 void CHTSPDemuxer::Flush ( void )
@@ -132,7 +132,7 @@ void CHTSPDemuxer::Flush ( void )
   DemuxPacket *pkt;
   Logger::Log(LogLevel::LEVEL_TRACE, "demux flush");
   while (m_pktBuffer.Pop(pkt))
-    PVR->FreeDemuxPacket(pkt);
+    PVR2->FreeDemuxPacket(pkt);
 }
 
 void CHTSPDemuxer::Trim ( void )
@@ -144,7 +144,7 @@ void CHTSPDemuxer::Trim ( void )
    * playback without buffering. This depends on the bitrate, so we don't set
    * this too small. */
   while (m_pktBuffer.Size() > 512 && m_pktBuffer.Pop(pkt))
-    PVR->FreeDemuxPacket(pkt);
+    PVR2->FreeDemuxPacket(pkt);
 }
 
 void CHTSPDemuxer::Abort ( void )
@@ -399,7 +399,7 @@ void CHTSPDemuxer::ParseMuxPacket ( htsmsg_t *m )
   m_streamStat[idx]++;
 
   /* Allocate buffer */
-  if (!(pkt = PVR->AllocateDemuxPacket(binlen)))
+  if (!(pkt = PVR2->AllocateDemuxPacket(binlen)))
     return;
   memcpy(pkt->pData, bin, binlen);
   pkt->iSize     = binlen;
@@ -436,7 +436,7 @@ void CHTSPDemuxer::ParseMuxPacket ( htsmsg_t *m )
   if (!ignore)
     m_pktBuffer.Push(pkt);
   else
-    PVR->FreeDemuxPacket(pkt);
+    PVR2->FreeDemuxPacket(pkt);
 }
 
 void CHTSPDemuxer::ParseSubscriptionStart ( htsmsg_t *m )
@@ -546,7 +546,7 @@ void CHTSPDemuxer::ParseSubscriptionStart ( htsmsg_t *m )
   /* Update streams */
   Logger::Log(LogLevel::LEVEL_DEBUG, "demux stream change");
   m_streams.iStreamCount = count;
-  pkt = PVR->AllocateDemuxPacket(0);
+  pkt = PVR2->AllocateDemuxPacket(0);
   pkt->iStreamId = DMX_SPECIALID_STREAMCHANGE;
   m_pktBuffer.Push(pkt);
 

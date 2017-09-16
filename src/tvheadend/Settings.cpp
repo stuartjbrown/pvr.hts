@@ -157,7 +157,7 @@ ADDON_STATUS Settings::SetSetting(const std::string &key, const void *value)
 std::string Settings::ReadStringSetting(const std::string &key, const std::string &def)
 {
   char value[1024];
-  if (XBMC->GetSetting(key.c_str(), value))
+  if (XBMC2->GetSetting(key.c_str(), value))
     return value;
 
   return def;
@@ -166,7 +166,7 @@ std::string Settings::ReadStringSetting(const std::string &key, const std::strin
 int Settings::ReadIntSetting(const std::string &key, int def)
 {
   int value;
-  if (XBMC->GetSetting(key.c_str(), &value))
+  if (XBMC2->GetSetting(key.c_str(), &value))
     return value;
 
   return def;
@@ -175,7 +175,7 @@ int Settings::ReadIntSetting(const std::string &key, int def)
 bool Settings::ReadBoolSetting(const std::string &key, bool def)
 {
   bool value;
-  if (XBMC->GetSetting(key.c_str(), &value))
+  if (XBMC2->GetSetting(key.c_str(), &value))
     return value;
 
   return def;

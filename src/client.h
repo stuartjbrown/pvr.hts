@@ -26,9 +26,9 @@
 #include "libXBMC_pvr.h"
 #include "libXBMC_codec.h"
 
-extern ADDON::CHelper_libXBMC_addon*  XBMC;
-extern CHelper_libXBMC_pvr*           PVR;
-extern CHelper_libXBMC_codec*         CODEC;
+extern ADDON::CHelper_libXBMC_addon*  XBMC2;
+extern CHelper_libXBMC_pvr*           PVR2;
+extern CHelper_libXBMC_codec*         CODEC2;
 
 /* timer type ids */
 #define TIMER_ONCE_MANUAL             (PVR_TIMER_TYPE_NONE + 1)
@@ -39,4 +39,4 @@ extern CHelper_libXBMC_codec*         CODEC;
 #define TIMER_REPEATING_EPG           (PVR_TIMER_TYPE_NONE + 6)
 
 class CTvheadend;
-extern CTvheadend                *tvh;
+extern CTvheadend                *tvh2;

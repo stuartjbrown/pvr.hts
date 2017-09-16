@@ -46,11 +46,11 @@ ADDON_STATUS m_CurStatus = ADDON_STATUS_UNKNOWN;
  * Globals
  */
 CMutex g_mutex;
-CHelper_libXBMC_addon *XBMC      = NULL;
-CHelper_libXBMC_pvr   *PVR       = NULL;
-CHelper_libXBMC_codec *CODEC     = NULL;
-PVR_MENUHOOK          *menuHook  = NULL;
-CTvheadend            *tvh       = NULL;
+CHelper_libXBMC_addon *XBMC2      = NULL;
+CHelper_libXBMC_pvr   *PVR2       = NULL;
+CHelper_libXBMC_codec *CODEC2     = NULL;
+PVR_MENUHOOK          *menuHook2  = NULL;
+CTvheadend            *tvh2       = NULL;
 
 /* **************************************************************************
  * ADDON setup
@@ -69,16 +69,16 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
     return m_CurStatus;
 
   /* Instantiate helpers */
-  XBMC  = new CHelper_libXBMC_addon;
-  CODEC = new CHelper_libXBMC_codec;
-  PVR   = new CHelper_libXBMC_pvr;
+  XBMC2  = new CHelper_libXBMC_addon;
+  CODEC2 = new CHelper_libXBMC_codec;
+  PVR2   = new CHelper_libXBMC_pvr;
 
-  if (!XBMC->RegisterMe(hdl) ||
-      !CODEC->RegisterMe(hdl) || !PVR->RegisterMe(hdl))
+  if (!XBMC2->RegisterMe(hdl) ||
+      !CODEC2->RegisterMe(hdl) || !PVR2->RegisterMe(hdl))
   {
-    SAFE_DELETE(PVR);
-    SAFE_DELETE(CODEC);
-    SAFE_DELETE(XBMC);
+    SAFE_DELETE(PVR2);
+    SAFE_DELETE(CODEC2);
+    SAFE_DELETE(XBMC2);
     m_CurStatus = ADDON_STATUS_PERMANENT_FAILURE;
     return m_CurStatus;
   }
@@ -105,7 +105,7 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
     if (level == LogLevel::LEVEL_TRACE && !Settings::GetInstance2().GetTraceDebug())
       return;
 
-    XBMC->Log(addonLevel, "%s", message);
+    XBMC2->Log(addonLevel, "%s", message);
   });
 
   Logger::GetInstance().SetPrefix("pvr.hts");
@@ -114,8 +114,8 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
 
   ADDON_ReadSettings();
 
-  tvh = new CTvheadend(reinterpret_cast<PVR_PROPERTIES *>(props));
-  tvh->Start();
+  tvh2 = new CTvheadend(reinterpret_cast<PVR_PROPERTIES *>(props));
+  tvh2->Start();
 
   m_CurStatus = ADDON_STATUS_OK;
   return m_CurStatus;
@@ -130,11 +130,11 @@ ADDON_STATUS ADDON_GetStatus()
 void ADDON_Destroy()
 {
   CLockObject lock(g_mutex);
-  SAFE_DELETE(tvh);
-  SAFE_DELETE(PVR);
-  SAFE_DELETE(CODEC);
-  SAFE_DELETE(XBMC);
-  SAFE_DELETE(menuHook);
+  SAFE_DELETE(tvh2);
+  SAFE_DELETE(PVR2);
+  SAFE_DELETE(CODEC2);
+  SAFE_DELETE(XBMC2);
+  SAFE_DELETE(menuHook2);
   m_CurStatus = ADDON_STATUS_UNKNOWN;
 }
 
@@ -167,14 +167,14 @@ void ADDON_FreeSettings()
 
 void OnSystemSleep()
 {
-  if (tvh)
-    tvh->OnSleep();
+  if (tvh2)
+    tvh2->OnSleep();
 }
 
 void OnSystemWake()
 {
-  if (tvh)
-    tvh->OnWake();
+  if (tvh2)
+    tvh2->OnWake();
 }
 
 void OnPowerSavingActivated()
@@ -225,7 +225,7 @@ const char *GetBackendName(void)
 {
   static std::string serverName;
 
-  serverName = tvh->GetServerName();
+  serverName = tvh2->GetServerName();
   return serverName.c_str();
 }
 
@@ -233,7 +233,7 @@ const char *GetBackendVersion(void)
 {
   static std::string serverVersion;
 
-  serverVersion = tvh->GetServerVersion();
+  serverVersion = tvh2->GetServerVersion();
   return serverVersion.c_str();
 }
 
@@ -241,7 +241,7 @@ const char *GetConnectionString(void)
 {
   static std::string serverString;
 
-  serverString = tvh->GetServerString();
+  serverString = tvh2->GetServerString();
   return serverString.c_str();
 }
 
@@ -252,7 +252,7 @@ const char *GetBackendHostname(void)
 
 PVR_ERROR GetDriveSpace(long long *iTotal, long long *iUsed)
 {
-  return tvh->GetDriveSpace(iTotal, iUsed);
+  return tvh2->GetDriveSpace(iTotal, iUsed);
 }
 
 /* **************************************************************************
@@ -272,17 +272,17 @@ PVR_ERROR CallMenuHook
 
 bool CanPauseStream(void)
 {
-  return tvh->HasCapability("timeshift");
+  return tvh2->HasCapability("timeshift");
 }
 
 bool CanSeekStream(void)
 {
-  return tvh->HasCapability("timeshift");
+  return tvh2->HasCapability("timeshift");
 }
 
 bool IsTimeshifting(void)
 {
-  return tvh->DemuxIsTimeShifting();
+  return tvh2->DemuxIsTimeShifting();
 }
 
 static time_t ConvertMusecsToTime(int64_t musecs)
@@ -294,67 +294,67 @@ static time_t ConvertMusecsToTime(int64_t musecs)
 
 time_t GetPlayingTime()
 {
-  return ConvertMusecsToTime(tvh->DemuxGetTimeshiftTime());
+  return ConvertMusecsToTime(tvh2->DemuxGetTimeshiftTime());
 }
 
 time_t GetBufferTimeStart()
 {
-  return ConvertMusecsToTime(tvh->DemuxGetTimeshiftBufferStart());
+  return ConvertMusecsToTime(tvh2->DemuxGetTimeshiftBufferStart());
 }
 
 time_t GetBufferTimeEnd()
 {
-  return ConvertMusecsToTime(tvh->DemuxGetTimeshiftBufferEnd());
+  return ConvertMusecsToTime(tvh2->DemuxGetTimeshiftBufferEnd());
 }
 
 bool IsRealTimeStream()
 {
-  return tvh->DemuxIsRealTimeStream();
+  return tvh2->DemuxIsRealTimeStream();
 }
 
 bool OpenLiveStream(const PVR_CHANNEL &channel)
 {
-  return tvh->DemuxOpen(channel);
+  return tvh2->DemuxOpen(channel);
 }
 
 void CloseLiveStream(void)
 {
-  tvh->DemuxClose();
+  tvh2->DemuxClose();
 }
 
 bool SeekTime(double time,bool backward,double *startpts)
 {
-  return tvh->DemuxSeek(time, backward, startpts);
+  return tvh2->DemuxSeek(time, backward, startpts);
 }
 
 void SetSpeed(int speed)
 {
-  tvh->DemuxSpeed(speed);
+  tvh2->DemuxSpeed(speed);
 }
 
 bool SwitchChannel(const PVR_CHANNEL &channel)
 {
-  return tvh->DemuxOpen(channel);
+  return tvh2->DemuxOpen(channel);
 }
 
 PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* pProperties)
 {
-  return tvh->DemuxCurrentStreams(pProperties);
+  return tvh2->DemuxCurrentStreams(pProperties);
 }
 
 PVR_ERROR SignalStatus(PVR_SIGNAL_STATUS &signalStatus)
 {
-  return tvh->DemuxCurrentSignal(signalStatus);
+  return tvh2->DemuxCurrentSignal(signalStatus);
 }
 
 DemuxPacket* DemuxRead(void)
 {
-  return tvh->DemuxRead();
+  return tvh2->DemuxRead();
 }
 
 void DemuxAbort(void)
 {
-  tvh->DemuxAbort();
+  tvh2->DemuxAbort();
 }
 
 void DemuxReset(void)
@@ -363,7 +363,7 @@ void DemuxReset(void)
 
 void DemuxFlush(void)
 {
-  tvh->DemuxFlush();
+  tvh2->DemuxFlush();
 }
 
 /* **************************************************************************
@@ -372,27 +372,27 @@ void DemuxFlush(void)
 
 int GetChannelGroupsAmount(void)
 {
-  return tvh->GetTagCount();
+  return tvh2->GetTagCount();
 }
 
 PVR_ERROR GetChannelGroups(ADDON_HANDLE handle, bool bRadio)
 {
-  return tvh->GetTags(handle, bRadio);
+  return tvh2->GetTags(handle, bRadio);
 }
 
 PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, const PVR_CHANNEL_GROUP &group)
 {
-  return tvh->GetTagMembers(handle, group);
+  return tvh2->GetTagMembers(handle, group);
 }
 
 int GetChannelsAmount(void)
 {
-  return tvh->GetChannelCount();
+  return tvh2->GetChannelCount();
 }
 
 PVR_ERROR GetChannels(ADDON_HANDLE handle, bool bRadio)
 {
-  return tvh->GetChannels(handle, bRadio);
+  return tvh2->GetChannels(handle, bRadio);
 }
 
 /* **************************************************************************
@@ -402,12 +402,12 @@ PVR_ERROR GetChannels(ADDON_HANDLE handle, bool bRadio)
 PVR_ERROR GetEPGForChannel
   (ADDON_HANDLE handle, const PVR_CHANNEL &channel, time_t iStart, time_t iEnd)
 {
-  return tvh->GetEpg(handle, channel, iStart, iEnd);
+  return tvh2->GetEpg(handle, channel, iStart, iEnd);
 }
 
 PVR_ERROR SetEPGTimeFrame(int iDays)
 {
-  return tvh->SetEPGTimeFrame(iDays);
+  return tvh2->SetEPGTimeFrame(iDays);
 }
 
 /* **************************************************************************
@@ -416,28 +416,28 @@ PVR_ERROR SetEPGTimeFrame(int iDays)
 
 int GetRecordingsAmount(bool deleted)
 {
-  return tvh->GetRecordingCount();
+  return tvh2->GetRecordingCount();
 }
 
 PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted)
 {
-  return tvh->GetRecordings(handle);
+  return tvh2->GetRecordings(handle);
 }
 
 PVR_ERROR GetRecordingEdl
   (const PVR_RECORDING &rec, PVR_EDL_ENTRY edl[], int *num)
 {
-  return tvh->GetRecordingEdl(rec, edl, num);
+  return tvh2->GetRecordingEdl(rec, edl, num);
 }
 
 PVR_ERROR DeleteRecording(const PVR_RECORDING &rec)
 {
-  return tvh->DeleteRecording(rec);
+  return tvh2->DeleteRecording(rec);
 }
 
 PVR_ERROR RenameRecording(const PVR_RECORDING &rec)
 {
-  return tvh->RenameRecording(rec);
+  return tvh2->RenameRecording(rec);
 }
 
 PVR_ERROR UndeleteRecording(const PVR_RECORDING& recording)
@@ -452,32 +452,32 @@ PVR_ERROR DeleteAllRecordingsFromTrash()
 
 PVR_ERROR GetTimerTypes(PVR_TIMER_TYPE types[], int *size)
 {
-  return tvh->GetTimerTypes(types, size);
+  return tvh2->GetTimerTypes(types, size);
 }
 
 int GetTimersAmount(void)
 {
-  return tvh->GetTimerCount();
+  return tvh2->GetTimerCount();
 }
 
 PVR_ERROR GetTimers(ADDON_HANDLE handle)
 {
-  return tvh->GetTimers(handle);
+  return tvh2->GetTimers(handle);
 }
 
 PVR_ERROR AddTimer(const PVR_TIMER &timer)
 {
-  return tvh->AddTimer(timer);
+  return tvh2->AddTimer(timer);
 }
 
 PVR_ERROR DeleteTimer(const PVR_TIMER &timer, bool bForceDelete)
 {
-  return tvh->DeleteTimer(timer, bForceDelete);
+  return tvh2->DeleteTimer(timer, bForceDelete);
 }
 
 PVR_ERROR UpdateTimer(const PVR_TIMER &timer)
 {
-  return tvh->UpdateTimer(timer);
+  return tvh2->UpdateTimer(timer);
 }
 
 /* **************************************************************************
@@ -486,32 +486,32 @@ PVR_ERROR UpdateTimer(const PVR_TIMER &timer)
 
 bool OpenRecordedStream(const PVR_RECORDING &recording)
 {
-  return tvh->VfsOpen(recording);
+  return tvh2->VfsOpen(recording);
 }
 
 void CloseRecordedStream(void)
 {
-  tvh->VfsClose();
+  tvh2->VfsClose();
 }
 
 int ReadRecordedStream(unsigned char *pBuffer, unsigned int iBufferSize)
 {
-  return static_cast<int>(tvh->VfsRead(pBuffer, iBufferSize));
+  return static_cast<int>(tvh2->VfsRead(pBuffer, iBufferSize));
 }
 
 long long SeekRecordedStream(long long iPosition, int iWhence /* = SEEK_SET */)
 {
-  return tvh->VfsSeek(iPosition, iWhence);
+  return tvh2->VfsSeek(iPosition, iWhence);
 }
 
 long long PositionRecordedStream(void)
 {
-  return tvh->VfsTell();
+  return tvh2->VfsTell();
 }
 
 long long LengthRecordedStream(void)
 {
-  return tvh->VfsSize();
+  return tvh2->VfsSize();
 }
 
 /* **************************************************************************

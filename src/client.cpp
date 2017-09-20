@@ -40,12 +40,12 @@ using namespace tvheadend::utilities;
 /*
  * Client state
  */
-ADDON_STATUS m_CurStatus = ADDON_STATUS_UNKNOWN;
+ADDON_STATUS m_CurStatus2 = ADDON_STATUS_UNKNOWN;
 
 /*
  * Globals
  */
-CMutex g_mutex;
+CMutex g_mutex2;
 CHelper_libXBMC_addon *XBMC2      = NULL;
 CHelper_libXBMC_pvr   *PVR2       = NULL;
 CHelper_libXBMC_codec *CODEC2     = NULL;
@@ -66,7 +66,7 @@ void ADDON_ReadSettings(void)
 ADDON_STATUS ADDON_Create(void* hdl, void* props)
 {
   if (!hdl || !props)
-    return m_CurStatus;
+    return m_CurStatus2;
 
   /* Instantiate helpers */
   XBMC2  = new CHelper_libXBMC_addon;
@@ -79,8 +79,8 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
     SAFE_DELETE(PVR2);
     SAFE_DELETE(CODEC2);
     SAFE_DELETE(XBMC2);
-    m_CurStatus = ADDON_STATUS_PERMANENT_FAILURE;
-    return m_CurStatus;
+    m_CurStatus2 = ADDON_STATUS_PERMANENT_FAILURE;
+    return m_CurStatus2;
   }
 
   /* Configure the logger */
@@ -117,25 +117,25 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
   tvh2 = new CTvheadend(reinterpret_cast<PVR_PROPERTIES *>(props));
   tvh2->Start();
 
-  m_CurStatus = ADDON_STATUS_OK;
-  return m_CurStatus;
+  m_CurStatus2 = ADDON_STATUS_OK;
+  return m_CurStatus2;
 }
 
 ADDON_STATUS ADDON_GetStatus()
 {
-  CLockObject lock(g_mutex);
-  return m_CurStatus;
+  CLockObject lock(g_mutex2);
+  return m_CurStatus2;
 }
 
 void ADDON_Destroy()
 {
-  CLockObject lock(g_mutex);
+  CLockObject lock(g_mutex2);
   SAFE_DELETE(tvh2);
   SAFE_DELETE(PVR2);
   SAFE_DELETE(CODEC2);
   SAFE_DELETE(XBMC2);
   SAFE_DELETE(menuHook2);
-  m_CurStatus = ADDON_STATUS_UNKNOWN;
+  m_CurStatus2 = ADDON_STATUS_UNKNOWN;
 }
 
 bool ADDON_HasSettings()
@@ -152,9 +152,9 @@ unsigned int ADDON_GetSettings
 ADDON_STATUS ADDON_SetSetting
   (const char *settingName, const void *settingValue)
 {
-  CLockObject lock(g_mutex);
-  m_CurStatus = Settings::GetInstance2().SetSetting(settingName, settingValue);
-  return m_CurStatus;
+  CLockObject lock(g_mutex2);
+  m_CurStatus2 = Settings::GetInstance2().SetSetting(settingName, settingValue);
+  return m_CurStatus2;
 }
 
 void ADDON_Stop()

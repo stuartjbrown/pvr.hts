@@ -84,7 +84,7 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
   }
 
   /* Configure the logger */
-  Logger::GetInstance().SetImplementation([](LogLevel level, const char *message)
+  Logger::GetInstance2().SetImplementation([](LogLevel level, const char *message)
   {
     /* Convert the log level */
     addon_log_t addonLevel;
@@ -108,9 +108,9 @@ ADDON_STATUS ADDON_Create(void* hdl, void* props)
     XBMC2->Log(addonLevel, "%s", message);
   });
 
-  Logger::GetInstance().SetPrefix("pvr.hts");
+  Logger::GetInstance2().SetPrefix("pvr.hts");
 
-  Logger::Log(LogLevel::LEVEL_INFO, "starting PVR client");
+  Logger::Log2(LogLevel::LEVEL_INFO, "starting PVR client");
 
   ADDON_ReadSettings();
 

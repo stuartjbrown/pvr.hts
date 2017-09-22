@@ -34,15 +34,15 @@ Logger::Logger()
   });
 }
 
-Logger &Logger::GetInstance()
+Logger &Logger::GetInstance2()
 {
-  static Logger instance;
-  return instance;
+  static Logger instance2;
+  return instance2;
 }
 
-void Logger::Log(LogLevel level, const char *message, ...)
+void Logger::Log2(LogLevel level, const char *message, ...)
 {
-  auto &logger = GetInstance();
+  auto &logger = GetInstance2();
 
   char buffer[MESSAGE_BUFFER_SIZE];
   std::string logMessage = message;

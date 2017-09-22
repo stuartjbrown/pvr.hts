@@ -56,7 +56,7 @@ namespace tvheadend
        * Returns the singleton instance
        * @return
        */
-      static Logger &GetInstance();
+      static Logger &GetInstance2();
 
       /**
        * Logs the specified message using the specified log level
@@ -64,7 +64,7 @@ namespace tvheadend
        * @param message the log message
        * @param ... parameters for the log message
        */
-      static void Log(LogLevel level, const char *message, ...);
+      static void Log2(LogLevel level, const char *message, ...);
 
       /**
        * Configures the logger to use the specified implementation
